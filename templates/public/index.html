@@ -1,0 +1,57 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="text-center">
+        <h2 class="text-2xl font-bold text-gray-800">Старт проверки</h2>
+        <p class="text-gray-500">Выберите вашу роль и введите данные аппарата</p>
+    </div>
+
+    <form action="/inspections/start" method="POST" class="space-y-6">
+        <div class="grid grid-cols-2 gap-3">
+            <label class="relative">
+                <input type="radio" name="role" value="OTK" class="peer sr-only" required>
+                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
+                    <div class="text-sm font-bold text-gray-800">ОТК</div>
+                    <div class="text-xs text-gray-500">Контроль качества</div>
+                </div>
+            </label>
+            <label class="relative">
+                <input type="radio" name="role" value="STICKER" class="peer sr-only">
+                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
+                    <div class="text-sm font-bold text-gray-800">Оклейка</div>
+                    <div class="text-xs text-gray-500">Внешний вид</div>
+                </div>
+            </label>
+            <label class="relative">
+                <input type="radio" name="role" value="ADS" class="peer sr-only">
+                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
+                    <div class="text-sm font-bold text-gray-800">Реклама</div>
+                    <div class="text-xs text-gray-500">Материалы</div>
+                </div>
+            </label>
+            <label class="relative">
+                <input type="radio" name="role" value="ASSEMBLER" class="peer sr-only">
+                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
+                    <div class="text-sm font-bold text-gray-800">Сборка</div>
+                    <div class="text-xs text-gray-500">Тех. часть</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="space-y-4">
+            <label class="block text-sm font-medium text-gray-700">Номер аппарата</label>
+            <input type="text" name="machine_serial" required placeholder="Например: VEND-12345" 
+                   class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Ваше ФИО</label>
+            <input type="text" name="inspector_name" required placeholder="Иванов Иван Иванович" 
+                   class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+            Начать чек-лист
+        </button>
+    </form>
+</div>
+{{end}}

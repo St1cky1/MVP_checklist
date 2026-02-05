@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: mvp-checklist
+    runtime: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mvp-checklist-db
+          property: connectionString
+      # AWS/S3 settings can be added here or in Render UI
+      - key: AWS_REGION
+        value: us-east-1
+      - key: S3_ENDPOINT
+        value: "" # Leave empty for real AWS S3
+
+databases:
+  - name: mvp-checklist-db
+    plan: free
+    databaseName: checklist_db
+    user: user

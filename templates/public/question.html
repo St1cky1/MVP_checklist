@@ -1,0 +1,58 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="space-y-2">
+        <div class="flex justify-between items-center text-sm text-gray-500">
+            <span>Вопрос {{.Data.CurrentStep}} из {{.Data.TotalSteps}}</span>
+            <span>{{.Data.MachineSerial}}</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {{index .Data.Progress}}%"></div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+        <h2 class="text-xl font-bold text-gray-800">{{.Data.Question.Text}}</h2>
+        
+        {{if .Data.Question.ReferenceImages}}
+        <div class="space-y-2">
+            <p class="text-sm font-medium text-gray-600">Как должно быть:</p>
+            <div class="grid grid-cols-2 gap-2">
+                {{range .Data.Question.ReferenceImages}}
+                <img src="{{.}}" class="rounded-lg object-cover h-32 w-full border border-gray-200 cursor-pointer" onclick="window.open(this.src)">
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+
+        <form action="/inspections/{{.Data.InspectionID}}/answer" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="question_id" value="{{.Data.Question.ID}}">
+            <input type="hidden" name="step" value="{{.Data.CurrentStep}}">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Фото подтверждения</label>
+                <div class="mt-2 flex items-center justify-center w-full">
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500 font-semibold">Нажмите, чтобы сделать фото</p>
+                            <p class="text-xs text-gray-400">PNG, JPG (мин. {{.Data.Question.MinPhotos}} фото)</p>
+                        </div>
+                        <input type="file" name="photos" multiple accept="image/*" capture="environment" class="hidden" required />
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Комментарий (опционально)</label>
+                <textarea name="comment" rows="2" class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Введите замечание..."></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                {{if eq .Data.CurrentStep .Data.TotalSteps}}Завершить{{else}}Следующий вопрос{{end}}
+            </button>
+        </form>
+    </div>
+</div>
+{{end}}

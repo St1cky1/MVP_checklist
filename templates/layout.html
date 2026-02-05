@@ -1,0 +1,40 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Checklist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-active { border-bottom: 4px solid #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm p-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-blue-600">MVP Checklist</h1>
+                {{if .IsAdmin}}
+                <nav class="hidden md:flex space-x-4 text-sm text-gray-500">
+                    <a href="/admin/inspections" class="hover:text-blue-600">Проверки</a>
+                    <a href="/admin/templates" class="hover:text-blue-600">Шаблоны</a>
+                </nav>
+                {{end}}
+            </div>
+            {{if .Role}}
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">{{.Role}}</span>
+            {{end}}
+        </div>
+    </header>
+
+    <main class="flex-grow p-4 max-w-4xl mx-auto w-full">
+        {{template "content" .}}
+    </main>
+
+    <footer class="p-4 text-center text-gray-400 text-sm">
+        &copy; 2024 MVP Checklist
+    </footer>
+</body>
+</html>
+{{end}}

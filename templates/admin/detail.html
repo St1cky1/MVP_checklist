@@ -1,0 +1,53 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="flex items-center space-x-2">
+        <a href="/admin/inspections" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+        <h2 class="text-2xl font-bold text-gray-800">Проверка {{.Data.Inspection.MachineSerial}}</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 gap-4 text-sm">
+        <div>
+            <p class="text-gray-500">Исполнитель:</p>
+            <p class="font-bold text-gray-800">{{.Data.Inspection.InspectorName}}</p>
+        </div>
+        <div>
+            <p class="text-gray-500">Статус:</p>
+            <p class="font-bold text-gray-800 uppercase">{{.Data.Inspection.Status}}</p>
+        </div>
+        <div>
+            <p class="text-gray-500">Начало:</p>
+            <p class="text-gray-700">{{.Data.Inspection.StartedAt.Format "02.01.2006 15:04"}}</p>
+        </div>
+        <div>
+            <p class="text-gray-500">Завершение:</p>
+            <p class="text-gray-700">{{if .Data.Inspection.FinishedAt}}{{.Data.Inspection.FinishedAt.Format "02.01.2006 15:04"}}{{else}}-{{end}}</p>
+        </div>
+    </div>
+
+    <div class="space-y-4">
+        {{range .Data.Answers}}
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-3">
+            <h3 class="font-bold text-gray-800">{{.Question.Text}}</h3>
+            
+            {{if .Answer.Comment}}
+            <div class="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 italic">
+                "{{.Answer.Comment}}"
+            </div>
+            {{end}}
+
+            {{if .Answer.Photos}}
+            <div class="grid grid-cols-3 gap-2">
+                {{range .Answer.Photos}}
+                <img src="{{.}}" class="rounded-lg object-cover h-24 w-full cursor-pointer hover:opacity-90" onclick="window.open(this.src)">
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-sm text-red-400">Фотографии не загружены</p>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
