@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MVP_checklist/internal/domain"
 	"context"
 	"fmt"
 	"log"
@@ -113,10 +114,10 @@ func main() {
 
 	// 7. Routing
 	mux := http.NewServeMux()
-	
+
 	// Admin routes
 	mux.Handle("/admin/", adminHandler)
-	
+
 	// Public routes (for inspectors)
 	mux.Handle("/", publicHandler)
 
