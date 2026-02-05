@@ -1,6 +1,6 @@
 module MVP_checklist
 
-go 1.25
+go 1.24.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.1

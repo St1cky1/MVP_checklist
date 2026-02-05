@@ -1,10 +1,20 @@
 #!/bin/sh
 
+# Ожидание доступности БД (базовый вариант)
+echo "Waiting for database to be ready..."
+sleep 5
+
 echo "Running migrations..."
-./migrate
+if ! ./migrate; then
+  echo "Migrations failed!"
+  exit 1
+fi
 
 echo "Seeding data..."
-./seed
+if ! ./seed; then
+  echo "Seeding failed!"
+  # Не выходим, если сид уже был сделан
+fi
 
 echo "Starting server..."
-./main
+exec ./main
