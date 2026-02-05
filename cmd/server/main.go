@@ -33,38 +33,71 @@ func main() {
 	defer dbPool.Close()
 
 	// 2. S3 client
-	s3Endpoint := os.Getenv("S3_ENDPOINT") // Для локальной разработки "http://localhost:4566"
+	s3Endpoint := os.Getenv("S3_ENDPOINT")
 	s3Region := os.Getenv("AWS_REGION")
 	if s3Region == "" {
 		s3Region = "us-east-1"
 	}
+	s3Key := os.Getenv("AWS_ACCESS_KEY_ID")
+	s3Secret := os.Getenv("AWS_SECRET_ACCESS_KEY")
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if s3Endpoint != "" && service == s3.ServiceID {
-			return aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           s3Endpoint,
-				SigningRegion: s3Region,
+	var opts []func(*config.LoadOptions) error
+	opts = append(opts, config.WithRegion(s3Region))
+
+	// Если есть эндпоинт (LocalStack)
+	if s3Endpoint != "" {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			if service == s3.ServiceID {
+				return aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           s3Endpoint,
+					SigningRegion: s3Region,
+				}, nil
+			}
+			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+		})
+		opts = append(opts, config.WithEndpointResolverWithOptions(customResolver))
+	}
+
+	// Если ключи не заданы и мы не в LocalStack, используем "пустые" ключи для предотвращения поиска IMDS роли
+	// Либо, если ключи заданы, используем их
+	if s3Key != "" && s3Secret != "" {
+		opts = append(opts, config.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+			return aws.Credentials{
+				AccessKeyID:     s3Key,
+				SecretAccessKey: s3Secret,
 			}, nil
-		}
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
+		})))
+	} else if s3Endpoint != "" {
+		// Для LocalStack часто подходят любые заглушки
+		opts = append(opts, config.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+			return aws.Credentials{
+				AccessKeyID:     "test",
+				SecretAccessKey: "test",
+			}, nil
+		})))
+	}
 
-	s3Config, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(s3Region),
-		config.WithEndpointResolverWithOptions(customResolver),
-	)
+	s3Config, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
 		log.Fatalf("Unable to load SDK config: %v\n", err)
 	}
+
 	s3Client := s3.NewFromConfig(s3Config, func(o *s3.Options) {
 		if s3Endpoint != "" {
-			o.UsePathStyle = true // Важно для LocalStack
+			o.UsePathStyle = true
 		}
 	})
 
 	// 3. Infrastructure
-	storage := infrastructure.NewS3Storage(s3Client)
+	var storage domain.FileStorage
+	if s3Key == "" && s3Endpoint == "" {
+		fmt.Println("Using FileSystem storage (uploads/ folder)")
+		storage = infrastructure.NewFileSystemStorage("uploads")
+	} else {
+		fmt.Println("Using S3 storage")
+		storage = infrastructure.NewS3Storage(s3Client)
+	}
 
 	// 4. Repositories
 	repo := repository.NewPostgresRepository(dbPool)
@@ -86,6 +119,9 @@ func main() {
 	
 	// Public routes (for inspectors)
 	mux.Handle("/", publicHandler)
+
+	// Static uploads route (for FileSystem storage)
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
 	port := os.Getenv("PORT")
 	if port == "" {

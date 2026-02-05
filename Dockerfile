@@ -40,6 +40,9 @@ COPY --from=builder /app/migrate .
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/migrations ./migrations
 
+# Create uploads directory
+RUN mkdir -p uploads
+
 # Copy start script
 COPY scripts/start.sh ./start.sh
 RUN chmod +x ./start.sh

@@ -36,3 +36,7 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Uploads
+/uploads/*
+!/uploads/.gitkeep
