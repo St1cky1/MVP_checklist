@@ -6,7 +6,7 @@
             <span>{{.Data.MachineSerial}}</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {{index .Data.Progress}}%"></div>
+            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: {{.Data.Progress}}%"></div>
         </div>
     </div>
 
@@ -15,72 +15,123 @@
         
         {{if .Data.Question.ReferenceImages}}
         <div class="space-y-2">
-            <p class="text-sm font-medium text-gray-600">Как должно быть:</p>
+            <p class="text-sm font-medium text-gray-600">Как должно быть (референс):</p>
             <div class="grid grid-cols-2 gap-2">
                 {{range .Data.Question.ReferenceImages}}
-                <img src="{{.}}" class="rounded-lg object-cover h-32 w-full border border-gray-200 cursor-pointer" onclick="window.open(this.src)">
+                <div class="relative group">
+                    <img src="{{.}}" class="rounded-lg object-cover h-40 w-full border border-gray-200 cursor-pointer transition hover:opacity-90" onclick="window.open(this.src)">
+                    <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-[10px] px-1 rounded">Образец</div>
+                </div>
                 {{end}}
             </div>
         </div>
         {{end}}
 
-        <form action="/inspections/{{.Data.InspectionID}}/answer" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form action="/inspections/{{.Data.InspectionID}}/answer" method="POST" enctype="multipart/form-data" class="space-y-4" id="answer-form">
             <input type="hidden" name="question_id" value="{{.Data.Question.ID}}">
             <input type="hidden" name="step" value="{{.Data.CurrentStep}}">
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Фото подтверждения</label>
+                <label class="block text-sm font-medium text-gray-700">Ваши фото подтверждения (до 5 шт.)</label>
                 <div class="mt-2 space-y-4">
                     <div id="photo-preview" class="grid grid-cols-3 gap-2 empty:hidden">
                         <!-- Сюда будут добавляться превью -->
                     </div>
                     
-                    <div class="flex items-center justify-center w-full">
-                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div class="flex items-center justify-center w-full" id="upload-container">
+                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <svg class="w-8 h-8 mb-3 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                                 </svg>
-                                <p class="mb-2 text-sm text-gray-500 font-semibold text-center">Нажмите, чтобы сделать фото</p>
-                                <p class="text-xs text-gray-400">PNG, JPG (мин. {{.Data.Question.MinPhotos}} фото)</p>
+                                <p class="mb-1 text-sm text-gray-500 font-semibold">Нажмите для выбора фото</p>
+                                <p class="text-xs text-gray-400">Можно выбрать до 5 файлов</p>
                             </div>
                             <input type="file" name="photos" id="photo-input" multiple accept="image/*" capture="environment" class="hidden" required />
                         </label>
                     </div>
+                    <p id="error-message" class="text-red-500 text-xs hidden">Вы можете загрузить не более 5 фотографий.</p>
                 </div>
             </div>
 
-            <script>
-                document.getElementById('photo-input').addEventListener('change', function(e) {
-                    const preview = document.getElementById('photo-preview');
-                    preview.innerHTML = '';
-                    
-                    if (this.files) {
-                        Array.from(this.files).forEach(file => {
-                            const reader = new FileReader();
-                            reader.onload = function(e) {
-                                const div = document.createElement('div');
-                                div.className = 'relative aspect-square';
-                                div.innerHTML = `
-                                    <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-gray-200">
-                                `;
-                                preview.appendChild(div);
-                            }
-                            reader.readAsDataURL(file);
-                        });
-                    }
-                });
-            </script>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700">Комментарий (опционально)</label>
-                <textarea name="comment" rows="2" class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Введите замечание..."></textarea>
+                <textarea name="comment" rows="2" class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Введите замечание, если есть..."></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
-                {{if eq .Data.CurrentStep .Data.TotalSteps}}Завершить{{else}}Следующий вопрос{{end}}
+            <button type="submit" id="submit-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                {{if eq .Data.CurrentStep .Data.TotalSteps}}Завершить проверку{{else}}Далее{{end}}
             </button>
         </form>
     </div>
 </div>
+
+<script>
+    const photoInput = document.getElementById('photo-input');
+    const preview = document.getElementById('photo-preview');
+    const errorMsg = document.getElementById('error-message');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // DataTransfer to store accumulated files
+    let allFiles = new DataTransfer();
+
+    photoInput.addEventListener('change', function(e) {
+        errorMsg.classList.add('hidden');
+        
+        if (this.files.length > 0) {
+            // Check total files limit
+            if (allFiles.files.length + this.files.length > 5) {
+                errorMsg.innerText = "Вы можете загрузить не более 5 фотографий всего.";
+                errorMsg.classList.remove('hidden');
+                this.value = ''; // clear input to allow re-selection
+                return;
+            }
+
+            // Add new files to our collection
+            Array.from(this.files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                
+                allFiles.items.add(file);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative aspect-square';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-gray-200 shadow-sm">
+                        <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition" onclick="removePhoto(this, '${file.name}')">&times;</button>
+                    `;
+                    preview.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+
+            // Update input files with our accumulated list
+            photoInput.files = allFiles.files;
+        }
+    });
+
+    window.removePhoto = function(btn, fileName) {
+        const div = btn.parentElement;
+        div.remove();
+
+        const newFiles = new DataTransfer();
+        let found = false;
+        Array.from(allFiles.files).forEach(file => {
+            if (file.name === fileName && !found) {
+                found = true; // skip first occurrence
+                return;
+            }
+            newFiles.items.add(file);
+        });
+        allFiles = newFiles;
+        photoInput.files = allFiles.files;
+        
+        if (allFiles.files.length < 5) {
+            errorMsg.classList.add('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    };
+</script>
 {{end}}

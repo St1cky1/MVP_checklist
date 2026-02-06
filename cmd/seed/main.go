@@ -28,48 +28,54 @@ func main() {
 	repo := repository.NewPostgresRepository(dbPool)
 	templateUC := usecase.NewTemplateUseCase(repo)
 
-	// 1. OTK Template
+	// 1. OTK Template (ОТК) - ТЕПЕРЬ ТОЖЕ ОБНОВЛЯЕМ (удаляем старый)
 	otkQuestions := []domain.Question{
-		{Text: "Проверка отсутствия царапин на корпусе", Order: 1, MinPhotos: 1, MaxPhotos: 3, IsRequired: true},
-		{Text: "Проверка работоспособности купюроприемника", Order: 2, MinPhotos: 1, MaxPhotos: 2, IsRequired: true},
-		{Text: "Проверка комплектации (ключи, паспорт)", Order: 3, MinPhotos: 1, MaxPhotos: 1, IsRequired: true},
+		{Text: "Все полки сзади закреплены стяжками для фиксации при грузоперевозке, чтобы минимизировать выпадение контактов электрики из цепи с дисплеями", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Пружины в каждой ячейке выставлены таким образом, чтобы из них не вываливался SOKOLOV сюрпрайз.", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Дисплеи всех линий горят, сняты светофильтры для того, чтобы дисплей горел ярче и лучше светилось табло.", Order: 3, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Установлена сим-карта, и рядом на двери наклеена сопроводительная информация с номером сим-карты и номером телефона из комплекта SOKOLOV.", Order: 4, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "На месте монетоприемника стоит металлическая заглушка", Order: 5, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions)
+	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, true)
 
-	// 2. Sticker Template
+	// 2. Sticker Template (Оклейка) - Удаляем старый перед созданием
 	stickerQuestions := []domain.Question{
-		{Text: "Оклейка фронтальной панели", Order: 1, MinPhotos: 1, MaxPhotos: 2, IsRequired: true},
-		{Text: "Оклейка боковых панелей", Order: 2, MinPhotos: 2, MaxPhotos: 4, IsRequired: true},
-		{Text: "Отсутствие пузырей под пленкой", Order: 3, MinPhotos: 1, MaxPhotos: 3, IsRequired: true},
+		{Text: "Тестовый пункт оклейки: Проверка качества нанесения фронтальной пленки", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Тестовый пункт оклейки: Отсутствие воздушных пузырей и заломов", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleSticker, stickerQuestions)
+	seedTemplate(ctx, templateUC, domain.RoleSticker, stickerQuestions, true)
 
-	// 3. Ads Template
+	// 3. Ads Template (Реклама) - Удаляем старый перед созданием
 	adsQuestions := []domain.Question{
-		{Text: "Установка рекламного лайтбокса", Order: 1, MinPhotos: 1, MaxPhotos: 1, IsRequired: true},
-		{Text: "Проверка подсветки", Order: 2, MinPhotos: 1, MaxPhotos: 1, IsRequired: true},
+		{Text: "Тестовый пункт рекламы: Лайтбокс установлен и надежно закреплен", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Тестовый пункт рекламы: Проверка равномерности подсветки", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleAds, adsQuestions)
+	seedTemplate(ctx, templateUC, domain.RoleAds, adsQuestions, true)
 
-	// 4. Assembler Template
+	// 4. Assembler Template (Сборка) - Удаляем старый перед созданием
 	assemblerQuestions := []domain.Question{
-		{Text: "Монтаж платежной системы", Order: 1, MinPhotos: 1, MaxPhotos: 2, IsRequired: true},
-		{Text: "Подключение шлейфов", Order: 2, MinPhotos: 2, MaxPhotos: 3, IsRequired: true},
-		{Text: "Настройка модема", Order: 3, MinPhotos: 1, MaxPhotos: 1, IsRequired: true},
+		{Text: "Тестовый пункт сборки: Проверка затяжки всех силовых контактов", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{Text: "Тестовый пункт сборки: Укладка кабелей внутри корпуса", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleAssembler, assemblerQuestions)
+	seedTemplate(ctx, templateUC, domain.RoleAssembler, assemblerQuestions, true)
 
 	log.Println("Seeding completed successfully!")
 }
 
-func seedTemplate(ctx context.Context, uc *usecase.TemplateUseCase, role domain.Role, questions []domain.Question) {
-	_, _, err := uc.GetTemplateByRole(ctx, role)
-	if err == nil {
-		log.Printf("Template for role %s already exists, skipping seed.\n", role)
-		return
+func seedTemplate(ctx context.Context, uc *usecase.TemplateUseCase, role domain.Role, questions []domain.Question, overwrite bool) {
+	if overwrite {
+		log.Printf("Deleting old template for role %s...\n", role)
+		_ = uc.DeleteTemplateByRole(ctx, role)
+	} else {
+		// Check if template exists
+		oldTmpl, _, err := uc.GetTemplateByRole(ctx, role)
+		if err == nil && oldTmpl != nil {
+			log.Printf("Template for role %s already exists, skipping.\n", role)
+			return
+		}
 	}
 
-	_, err = uc.CreateTemplate(ctx, role, questions)
+	_, err := uc.CreateTemplate(ctx, role, questions)
 	if err != nil {
 		log.Printf("Failed to seed template for %s: %v\n", role, err)
 	} else {

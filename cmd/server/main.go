@@ -96,8 +96,12 @@ func main() {
 		fmt.Println("Using FileSystem storage (uploads/ folder)")
 		storage = infrastructure.NewFileSystemStorage("uploads")
 	} else {
-		fmt.Println("Using S3 storage")
-		storage = infrastructure.NewS3Storage(s3Client)
+		bucketName := os.Getenv("S3_BUCKET_NAME")
+		if bucketName == "" {
+			bucketName = "checklist-photos" // default
+		}
+		fmt.Printf("Using S3 storage (bucket: %s)\n", bucketName)
+		storage = infrastructure.NewS3Storage(s3Client, bucketName)
 	}
 
 	// 4. Repositories

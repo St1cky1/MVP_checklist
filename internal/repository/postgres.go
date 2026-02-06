@@ -56,7 +56,7 @@ func (r *PostgresRepository) ListTemplates(ctx context.Context) ([]domain.Checkl
 func (r *PostgresRepository) GetTemplateByRole(ctx context.Context, role domain.Role) (*domain.ChecklistTemplate, error) {
 	query := `SELECT id, role, version, is_active, created_at FROM checklist_templates 
               WHERE role = $1 AND is_active = true ORDER BY version DESC LIMIT 1`
-	
+
 	var t domain.ChecklistTemplate
 	err := r.db.QueryRow(ctx, query, string(role)).Scan(&t.ID, &t.Role, &t.Version, &t.IsActive, &t.CreatedAt)
 	if err != nil {
@@ -68,10 +68,21 @@ func (r *PostgresRepository) GetTemplateByRole(ctx context.Context, role domain.
 	return &t, nil
 }
 
+func (r *PostgresRepository) GetTemplateByID(ctx context.Context, id uuid.UUID) (*domain.ChecklistTemplate, error) {
+	query := `SELECT id, role, version, is_active, created_at FROM checklist_templates WHERE id = $1`
+
+	var t domain.ChecklistTemplate
+	err := r.db.QueryRow(ctx, query, id).Scan(&t.ID, &t.Role, &t.Version, &t.IsActive, &t.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
 func (r *PostgresRepository) GetQuestionsByTemplateID(ctx context.Context, templateID uuid.UUID) ([]domain.Question, error) {
 	query := `SELECT id, template_id, text, "order", min_photos, max_photos, is_required, reference_images, created_at 
               FROM questions WHERE template_id = $1 ORDER BY "order" ASC`
-	
+
 	rows, err := r.db.Query(ctx, query, templateID)
 	if err != nil {
 		return nil, err
@@ -93,7 +104,7 @@ func (r *PostgresRepository) GetQuestionsByTemplateID(ctx context.Context, templ
 func (r *PostgresRepository) CreateInspection(ctx context.Context, inspection *domain.Inspection) error {
 	query := `INSERT INTO inspections (id, template_id, machine_serial, inspector_name, status, started_at) 
               VALUES ($1, $2, $3, $4, $5, $6)`
-	
+
 	_, err := r.db.Exec(ctx, query, inspection.ID, inspection.TemplateID, inspection.MachineSerial, inspection.InspectorName, string(inspection.Status), inspection.StartedAt)
 	return err
 }
@@ -101,7 +112,7 @@ func (r *PostgresRepository) CreateInspection(ctx context.Context, inspection *d
 func (r *PostgresRepository) GetInspectionByID(ctx context.Context, id uuid.UUID) (*domain.Inspection, error) {
 	query := `SELECT id, template_id, machine_serial, inspector_name, status, started_at, finished_at 
               FROM inspections WHERE id = $1`
-	
+
 	var i domain.Inspection
 	err := r.db.QueryRow(ctx, query, id).Scan(&i.ID, &i.TemplateID, &i.MachineSerial, &i.InspectorName, &i.Status, &i.StartedAt, &i.FinishedAt)
 	if err != nil {
@@ -155,7 +166,7 @@ func (r *PostgresRepository) GetInspectionAnswers(ctx context.Context, inspectio
               LEFT JOIN answer_photos ap ON ia.id = ap.answer_id
               WHERE ia.inspection_id = $1
               GROUP BY ia.id`
-	
+
 	rows, err := r.db.Query(ctx, query, inspectionID)
 	if err != nil {
 		return nil, err
@@ -183,7 +194,7 @@ func (r *PostgresRepository) SaveAnswer(ctx context.Context, answer *domain.Insp
 
 	queryAnswer := `INSERT INTO inspection_answers (id, inspection_id, question_id, comment) 
                     VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET comment = $4`
-	
+
 	_, err = tx.Exec(ctx, queryAnswer, answer.ID, answer.InspectionID, answer.QuestionID, answer.Comment)
 	if err != nil {
 		return err
@@ -210,4 +221,39 @@ func (r *PostgresRepository) CompleteInspection(ctx context.Context, id uuid.UUI
 	query := `UPDATE inspections SET status = $1, finished_at = $2 WHERE id = $3`
 	_, err := r.db.Exec(ctx, query, string(domain.StatusCompleted), time.Now(), id)
 	return err
+}
+
+func (r *PostgresRepository) DeleteTemplateByRole(ctx context.Context, role domain.Role) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Get template ID
+	var templateID uuid.UUID
+	err = tx.QueryRow(ctx, "SELECT id FROM checklist_templates WHERE role = $1", string(role)).Scan(&templateID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil // Nothing to delete
+		}
+		return err
+	}
+
+	// Delete related records (simple approach for seeding)
+	// Note: In production, you might want to keep inspections.
+	_, _ = tx.Exec(ctx, "DELETE FROM answer_photos WHERE answer_id IN (SELECT id FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1))", templateID)
+	_, _ = tx.Exec(ctx, "DELETE FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1)", templateID)
+	_, _ = tx.Exec(ctx, "DELETE FROM inspections WHERE template_id = $1", templateID)
+	_, err = tx.Exec(ctx, "DELETE FROM questions WHERE template_id = $1", templateID)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, "DELETE FROM checklist_templates WHERE id = $1", templateID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

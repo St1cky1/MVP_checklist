@@ -12,15 +12,19 @@ import (
 
 type S3Storage struct {
 	client *s3.Client
+	bucket string
 }
 
-func NewS3Storage(client *s3.Client) *S3Storage {
-	return &S3Storage{client: client}
+func NewS3Storage(client *s3.Client, bucket string) *S3Storage {
+	return &S3Storage{
+		client: client,
+		bucket: bucket,
+	}
 }
 
-func (s *S3Storage) Upload(ctx context.Context, bucket, key string, data []byte) (string, error) {
+func (s *S3Storage) Upload(ctx context.Context, _, key string, data []byte) (string, error) {
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 		Body:   bytes.NewReader(data),
 	})
@@ -30,13 +34,13 @@ func (s *S3Storage) Upload(ctx context.Context, bucket, key string, data []byte)
 	return key, nil
 }
 
-func (s *S3Storage) GetURL(ctx context.Context, bucket, key string) (string, error) {
+func (s *S3Storage) GetURL(ctx context.Context, _, key string) (string, error) {
 	presignClient := s3.NewPresignClient(s.client)
 	presignedUrl, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
+		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	}, s3.WithPresignExpires(time.Hour*24))
-	
+
 	if err != nil {
 		return "", fmt.Errorf("failed to presign s3 url: %w", err)
 	}

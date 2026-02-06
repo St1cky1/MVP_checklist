@@ -45,7 +45,7 @@ func (u *AnalyticsUseCase) GetInspectionDetail(ctx context.Context, inspectionID
 	for _, a := range answers {
 		// Replace S3 keys with presigned URLs for viewing
 		for i, key := range a.Photos {
-			url, err := u.storage.GetURL(ctx, "checklist-photos", key)
+			url, err := u.storage.GetURL(ctx, "", key)
 			if err == nil {
 				a.Photos[i] = url
 			}
@@ -117,8 +117,8 @@ func (u *AnalyticsUseCase) ExportToPDF(ctx context.Context, inspectionID uuid.UU
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
-	
-	// Note: Standard fonts don't support Cyrillic. 
+
+	// Note: Standard fonts don't support Cyrillic.
 	// In a real app, we would add a Unicode font here.
 	pdf.SetFont("Arial", "B", 16)
 	pdf.Cell(40, 10, fmt.Sprintf("Inspection: %s", detail.Inspection.MachineSerial))
@@ -135,12 +135,12 @@ func (u *AnalyticsUseCase) ExportToPDF(ctx context.Context, inspectionID uuid.UU
 	for _, d := range detail.Answers {
 		pdf.SetFont("Arial", "B", 12)
 		pdf.MultiCell(0, 8, d.Question.Text, "", "", false)
-		
+
 		pdf.SetFont("Arial", "I", 10)
 		if d.Answer.Comment != "" {
 			pdf.MultiCell(0, 6, fmt.Sprintf("Comment: %s", d.Answer.Comment), "", "", false)
 		}
-		
+
 		if len(d.Answer.Photos) > 0 {
 			pdf.SetFont("Arial", "", 10)
 			pdf.Cell(0, 6, fmt.Sprintf("Photos: %d uploaded", len(d.Answer.Photos)))
@@ -161,4 +161,3 @@ func (u *AnalyticsUseCase) ExportToPDF(ctx context.Context, inspectionID uuid.UU
 
 	return buf.Bytes(), nil
 }
-

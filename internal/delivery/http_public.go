@@ -24,9 +24,25 @@ func NewPublicHandler(inspectionUC *usecase.InspectionUseCase) *PublicHandler {
 
 func (h *PublicHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
+
+	// Role mapping from URL to domain.Role
+	roleMap := map[string]domain.Role{
+		"/OTK":       domain.RoleOTK,
+		"/pasting":   domain.RoleSticker,
+		"/ads":       domain.RoleAds,
+		"/assembler": domain.RoleAssembler,
+	}
+
 	switch {
 	case path == "/" && r.Method == http.MethodGet:
-		h.render(w, "index.html", nil)
+		h.render(w, "role_required.html", nil)
+
+	case roleMap[path] != "" && r.Method == http.MethodGet:
+		role := roleMap[path]
+		h.render(w, "index.html", map[string]interface{}{
+			"Role": role,
+		})
+
 	case path == "/inspections/start" && r.Method == http.MethodPost:
 		h.handleStartInspection(w, r)
 	case strings.HasPrefix(path, "/inspections/") && strings.HasSuffix(path, "/question") && r.Method == http.MethodGet:
@@ -50,6 +66,13 @@ func (h *PublicHandler) render(w http.ResponseWriter, name string, data interfac
 	renderData := map[string]interface{}{
 		"IsAdmin": false,
 		"Data":    data,
+	}
+
+	// Extract Role from data if it's a map
+	if m, ok := data.(map[string]interface{}); ok {
+		if role, ok := m["Role"]; ok {
+			renderData["Role"] = role
+		}
 	}
 	err = tmpl.ExecuteTemplate(w, "layout", renderData)
 	if err != nil {
@@ -104,7 +127,7 @@ func (h *PublicHandler) handleSaveAnswer(w http.ResponseWriter, r *http.Request)
 	parts := strings.Split(r.URL.Path, "/")
 	inspectionID, _ := uuid.Parse(parts[2])
 
-	err := r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(50 << 20) // 50MB for multiple photos
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -145,6 +168,18 @@ func (h *PublicHandler) handleShowSuccess(w http.ResponseWriter, r *http.Request
 	parts := strings.Split(r.URL.Path, "/")
 	inspectionID, _ := uuid.Parse(parts[2])
 
-	inspection, _ := h.inspectionUC.GetInspectionByID(r.Context(), inspectionID)
-	h.render(w, "success.html", inspection)
+	inspection, role, _ := h.inspectionUC.GetInspectionWithRole(r.Context(), inspectionID)
+
+	// Map domain.Role back to URL path
+	rolePathMap := map[domain.Role]string{
+		domain.RoleOTK:       "/OTK",
+		domain.RoleSticker:   "/pasting",
+		domain.RoleAds:       "/ads",
+		domain.RoleAssembler: "/assembler",
+	}
+
+	h.render(w, "success.html", map[string]interface{}{
+		"Inspection": inspection,
+		"NextURL":    rolePathMap[role],
+	})
 }
