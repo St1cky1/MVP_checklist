@@ -93,9 +93,29 @@ func (u *InspectionUseCase) GetInspectionWithRole(ctx context.Context, id uuid.U
 }
 
 func (u *InspectionUseCase) GetQuestionsByTemplateID(ctx context.Context, templateID uuid.UUID) (*domain.ChecklistTemplate, []domain.Question, error) {
-	// For simplicity, we just return questions
 	questions, err := u.repo.GetQuestionsByTemplateID(ctx, templateID)
-	return nil, questions, err
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Generate signed URLs for reference images
+	for i := range questions {
+		if len(questions[i].ReferenceImages) > 0 {
+			var signedURLs []string
+			for _, key := range questions[i].ReferenceImages {
+				url, err := u.storage.GetURL(ctx, "", key)
+				if err == nil {
+					signedURLs = append(signedURLs, url)
+				} else {
+					// If failed to sign, keep original or log
+					signedURLs = append(signedURLs, key)
+				}
+			}
+			questions[i].ReferenceImages = signedURLs
+		}
+	}
+
+	return nil, questions, nil
 }
 
 func (u *InspectionUseCase) CompleteInspection(ctx context.Context, inspectionID uuid.UUID) error {
