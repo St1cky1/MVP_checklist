@@ -77,7 +77,9 @@ type ChecklistRepository interface {
 	CreateQuestion(ctx context.Context, question *Question) error
 	ListTemplates(ctx context.Context) ([]ChecklistTemplate, error)
 	GetTemplateByRole(ctx context.Context, role Role) (*ChecklistTemplate, error)
+	GetTemplateByID(ctx context.Context, id uuid.UUID) (*ChecklistTemplate, error)
 	GetQuestionsByTemplateID(ctx context.Context, templateID uuid.UUID) ([]Question, error)
+	DeleteTemplateByRole(ctx context.Context, role Role) error
 	CreateInspection(ctx context.Context, inspection *Inspection) error
 	GetInspectionByID(ctx context.Context, id uuid.UUID) (*Inspection, error)
 	ListInspections(ctx context.Context, role *Role, status *InspectionStatus) ([]Inspection, error)

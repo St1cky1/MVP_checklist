@@ -57,7 +57,7 @@ func (u *InspectionUseCase) SaveAnswer(ctx context.Context, inspectionID, questi
 	var photoKeys []string
 	for i, data := range photos {
 		key := fmt.Sprintf("inspections/%s/%s/%d.jpg", inspectionID, questionID, i)
-		uploadedKey, err := u.storage.Upload(ctx, "checklist-photos", key, data)
+		uploadedKey, err := u.storage.Upload(ctx, "", key, data)
 		if err != nil {
 			return fmt.Errorf("failed to upload photo %d: %w", i, err)
 		}
@@ -78,6 +78,18 @@ func (u *InspectionUseCase) SaveAnswer(ctx context.Context, inspectionID, questi
 
 func (u *InspectionUseCase) GetInspectionByID(ctx context.Context, id uuid.UUID) (*domain.Inspection, error) {
 	return u.repo.GetInspectionByID(ctx, id)
+}
+
+func (u *InspectionUseCase) GetInspectionWithRole(ctx context.Context, id uuid.UUID) (*domain.Inspection, domain.Role, error) {
+	inspection, err := u.repo.GetInspectionByID(ctx, id)
+	if err != nil {
+		return nil, "", err
+	}
+	template, err := u.repo.GetTemplateByID(ctx, inspection.TemplateID)
+	if err != nil {
+		return inspection, "", nil // return inspection even if template not found
+	}
+	return inspection, template.Role, nil
 }
 
 func (u *InspectionUseCase) GetQuestionsByTemplateID(ctx context.Context, templateID uuid.UUID) (*domain.ChecklistTemplate, []domain.Question, error) {

@@ -55,3 +55,7 @@ func (u *TemplateUseCase) GetTemplateByRole(ctx context.Context, role domain.Rol
 
 	return template, questions, nil
 }
+
+func (u *TemplateUseCase) DeleteTemplateByRole(ctx context.Context, role domain.Role) error {
+	return u.repo.DeleteTemplateByRole(ctx, role)
+}

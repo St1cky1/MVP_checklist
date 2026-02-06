@@ -2,51 +2,36 @@
 <div class="space-y-6">
     <div class="text-center">
         <h2 class="text-2xl font-bold text-gray-800">Старт проверки</h2>
-        <p class="text-gray-500">Выберите вашу роль и введите данные аппарата</p>
+        <p class="text-gray-500">Введите данные для начала работы</p>
+        {{if .Data.Role}}
+        <div class="mt-2 inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+            Роль: {{.Data.Role}}
+        </div>
+        {{end}}
     </div>
 
-    <form action="/inspections/start" method="POST" class="space-y-6">
-        <div class="grid grid-cols-2 gap-3">
-            <label class="relative">
-                <input type="radio" name="role" value="OTK" class="peer sr-only" required>
-                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
-                    <div class="text-sm font-bold text-gray-800">ОТК</div>
-                    <div class="text-xs text-gray-500">Контроль качества</div>
-                </div>
-            </label>
-            <label class="relative">
-                <input type="radio" name="role" value="STICKER" class="peer sr-only">
-                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
-                    <div class="text-sm font-bold text-gray-800">Оклейка</div>
-                    <div class="text-xs text-gray-500">Внешний вид</div>
-                </div>
-            </label>
-            <label class="relative">
-                <input type="radio" name="role" value="ADS" class="peer sr-only">
-                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
-                    <div class="text-sm font-bold text-gray-800">Реклама</div>
-                    <div class="text-xs text-gray-500">Материалы</div>
-                </div>
-            </label>
-            <label class="relative">
-                <input type="radio" name="role" value="ASSEMBLER" class="peer sr-only">
-                <div class="p-4 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 hover:bg-gray-50">
-                    <div class="text-sm font-bold text-gray-800">Сборка</div>
-                    <div class="text-xs text-gray-500">Тех. часть</div>
-                </div>
-            </label>
-        </div>
-
+    <form action="/inspections/start" method="POST" class="space-y-6" id="start-form">
+        <input type="hidden" name="role" value="{{.Data.Role}}">
+        
         <div class="space-y-4">
-            <label class="block text-sm font-medium text-gray-700">Номер аппарата</label>
-            <input type="text" name="machine_serial" required placeholder="Например: VEND-12345" 
-                   class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Номер аппарата</label>
+                <input type="text" name="machine_serial" required placeholder="Например: VEND-12345" 
+                       class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Ваше ФИО</label>
-            <input type="text" name="inspector_name" required placeholder="Иванов Иван Иванович" 
-                   class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Ваше ФИО</label>
+                <input type="text" id="inspector_name" name="inspector_name" required placeholder="Иванов Иван Иванович" 
+                       class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="flex items-center">
+                <input type="checkbox" id="remember_me" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="remember_me" class="ml-2 block text-sm text-gray-900">
+                    Запомнить меня
+                </label>
+            </div>
         </div>
 
         <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
@@ -54,4 +39,28 @@
         </button>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('inspector_name');
+        const rememberCheckbox = document.getElementById('remember_me');
+        const form = document.getElementById('start-form');
+
+        // Load saved name
+        const savedName = localStorage.getItem('inspector_name');
+        if (savedName) {
+            nameInput.value = savedName;
+            rememberCheckbox.checked = true;
+        }
+
+        // Save name on submit
+        form.addEventListener('submit', function() {
+            if (rememberCheckbox.checked) {
+                localStorage.setItem('inspector_name', nameInput.value);
+            } else {
+                localStorage.removeItem('inspector_name');
+            }
+        });
+    });
+</script>
 {{end}}
