@@ -24,8 +24,8 @@ RUN CGO_ENABLED=1 go build -o migrate ./cmd/migrate/main.go
 # Final stage
 FROM alpine:latest
 
-# Install CA certificates and tesseract runtime dependencies
-RUN apk add --no-cache ca-certificates tesseract-ocr leptonica
+# Install CA certificates and tesseract runtime dependencies with language data
+RUN apk add --no-cache ca-certificates tesseract-ocr leptonica tesseract-ocr-data-eng tesseract-ocr-data-rus
 
 WORKDIR /app
 

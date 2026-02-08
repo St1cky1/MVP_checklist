@@ -148,8 +148,11 @@
         closeModal.addEventListener('click', stopStream);
 
         captureBtn.addEventListener('click', async () => {
+            // Freeze video and show loading
+            video.pause();
             ocrLoading.classList.remove('hidden');
             ocrError.classList.add('hidden');
+            captureBtn.disabled = true;
 
             // Draw current frame to canvas
             const context = canvas.getContext('2d');
@@ -168,23 +171,29 @@
                         body: formData
                     });
 
-                    if (!response.ok) throw new Error('Ошибка при распознавании');
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'Ошибка сервера');
+                    }
 
                     const result = await response.json();
-                    if (result.text) {
+                    if (result.text && result.text.length > 0) {
                         serialInput.value = result.text;
                         stopStream();
                     } else {
-                        throw new Error('Текст не найден');
+                        throw new Error('Текст не распознан. Попробуйте навести камеру точнее.');
                     }
                 } catch (err) {
                     console.error('OCR Error:', err);
-                    ocrError.textContent = 'Ошибка распознавания. Попробуйте еще раз или введите вручную.';
+                    ocrError.textContent = err.message;
                     ocrError.classList.remove('hidden');
+                    // Resume video on error so user can try again
+                    video.play();
                 } finally {
                     ocrLoading.classList.add('hidden');
+                    captureBtn.disabled = false;
                 }
-            }, 'image/jpeg', 0.8);
+            }, 'image/jpeg', 0.9);
         });
     });
 </script>

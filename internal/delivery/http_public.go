@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"MVP_checklist/internal/domain"
 	"MVP_checklist/internal/usecase"
+
 	"github.com/google/uuid"
 )
 
@@ -205,7 +207,8 @@ func (h *PublicHandler) handleOCR(w http.ResponseWriter, r *http.Request) {
 
 	text, err := h.ocrUC.ProcessOCR(imageBytes)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("OCR Processing error: %v", err)
+		http.Error(w, "Ошибка обработки изображения: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
