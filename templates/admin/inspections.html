@@ -5,7 +5,8 @@
     </div>
 
     <div class="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
+        <!-- Desktop Table -->
+        <table class="hidden md:table min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Аппарат</th>
@@ -35,6 +36,42 @@
                 {{end}}
             </tbody>
         </table>
+
+        <!-- Mobile List (Cards) -->
+        <div class="md:hidden divide-y divide-gray-200">
+            {{range .Data}}
+            <div class="p-4 space-y-3 hover:bg-gray-50 transition duration-150">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <div class="font-bold text-gray-900 text-lg">#{{.MachineSerial}}</div>
+                        <div class="text-sm text-gray-600 font-medium">{{.InspectorName}}</div>
+                    </div>
+                    <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full {{if eq .Status "completed"}}bg-green-100 text-green-800{{else}}bg-yellow-100 text-yellow-800{{end}}">
+                        {{.Status}}
+                    </span>
+                </div>
+                
+                <div class="text-xs text-gray-500 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {{.StartedAt.Format "02.01.2006 15:04"}}
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <a href="/admin/inspections/{{.ID}}" class="flex-1 text-center bg-blue-50 text-blue-700 font-bold py-2 rounded-lg text-sm border border-blue-100 hover:bg-blue-100 transition">
+                        Просмотр
+                    </a>
+                    <a href="/admin/inspections/{{.ID}}/export/csv" class="flex-1 text-center bg-gray-50 text-gray-700 font-medium py-2 rounded-lg text-sm border border-gray-100 hover:bg-gray-100 transition">
+                        CSV
+                    </a>
+                    <a href="/admin/inspections/{{.ID}}/export/pdf" class="flex-1 text-center bg-gray-50 text-gray-700 font-medium py-2 rounded-lg text-sm border border-gray-100 hover:bg-gray-100 transition">
+                        PDF
+                    </a>
+                </div>
+            </div>
+            {{end}}
+        </div>
     </div>
 </div>
 {{end}}
