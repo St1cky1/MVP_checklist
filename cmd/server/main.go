@@ -111,10 +111,11 @@ func main() {
 	templateUC := usecase.NewTemplateUseCase(repo)
 	inspectionUC := usecase.NewInspectionUseCase(repo, storage)
 	analyticsUC := usecase.NewAnalyticsUseCase(repo, storage)
+	ocrUC := usecase.NewOCRUseCase()
 
 	// 6. Delivery
 	adminHandler := delivery.NewAdminHandler(templateUC, analyticsUC)
-	publicHandler := delivery.NewPublicHandler(inspectionUC)
+	publicHandler := delivery.NewPublicHandler(inspectionUC, ocrUC)
 
 	// 7. Routing
 	mux := http.NewServeMux()

@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"encoding/json"
 	"html/template"
 	"io"
 	"net/http"
@@ -14,11 +15,13 @@ import (
 
 type PublicHandler struct {
 	inspectionUC *usecase.InspectionUseCase
+	ocrUC        *usecase.OCRUseCase
 }
 
-func NewPublicHandler(inspectionUC *usecase.InspectionUseCase) *PublicHandler {
+func NewPublicHandler(inspectionUC *usecase.InspectionUseCase, ocrUC *usecase.OCRUseCase) *PublicHandler {
 	return &PublicHandler{
 		inspectionUC: inspectionUC,
+		ocrUC:        ocrUC,
 	}
 }
 
@@ -45,6 +48,8 @@ func (h *PublicHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case path == "/inspections/start" && r.Method == http.MethodPost:
 		h.handleStartInspection(w, r)
+	case path == "/api/ocr" && r.Method == http.MethodPost:
+		h.handleOCR(w, r)
 	case strings.HasPrefix(path, "/inspections/") && strings.HasSuffix(path, "/question") && r.Method == http.MethodGet:
 		h.handleShowQuestion(w, r)
 	case strings.HasPrefix(path, "/inspections/") && strings.HasSuffix(path, "/answer") && r.Method == http.MethodPost:
@@ -181,5 +186,31 @@ func (h *PublicHandler) handleShowSuccess(w http.ResponseWriter, r *http.Request
 	h.render(w, "success.html", map[string]interface{}{
 		"Inspection": inspection,
 		"NextURL":    rolePathMap[role],
+	})
+}
+
+func (h *PublicHandler) handleOCR(w http.ResponseWriter, r *http.Request) {
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Image is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	imageBytes, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Failed to read image", http.StatusInternalServerError)
+		return
+	}
+
+	text, err := h.ocrUC.ProcessOCR(imageBytes)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"text": strings.TrimSpace(text),
 	})
 }

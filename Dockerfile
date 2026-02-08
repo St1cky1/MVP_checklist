@@ -2,8 +2,8 @@ FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-# Install git if needed for dependencies
-RUN apk add --no-cache git
+# Install build dependencies for CGO and tesseract
+RUN apk add --no-cache git gcc g++ musl-dev tesseract-ocr-dev leptonica-dev
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -12,23 +12,20 @@ RUN go mod download
 # Copy the entire project
 COPY . .
 
-# Check structure (useful for logs if build fails)
-RUN ls -R
-
-# Build the application
-RUN go build -o main ./cmd/server/main.go
+# Build the application with CGO enabled for gosseract
+RUN CGO_ENABLED=1 go build -o main ./cmd/server/main.go
 
 # Build the seeder
-RUN go build -o seed ./cmd/seed/main.go
+RUN CGO_ENABLED=1 go build -o seed ./cmd/seed/main.go
 
 # Build the migrator
-RUN go build -o migrate ./cmd/migrate/main.go
+RUN CGO_ENABLED=1 go build -o migrate ./cmd/migrate/main.go
 
 # Final stage
 FROM alpine:latest
 
-# Install CA certificates for S3/AWS
-RUN apk add --no-cache ca-certificates
+# Install CA certificates and tesseract runtime dependencies
+RUN apk add --no-cache ca-certificates tesseract-ocr leptonica
 
 WORKDIR /app
 
