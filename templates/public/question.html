@@ -10,57 +10,55 @@
         </div>
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-        <h2 class="text-xl font-bold text-gray-800">{{.Data.Question.Text}}</h2>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+        <h2 class="text-lg font-bold text-gray-800 leading-tight">{{.Data.Question.Text}}</h2>
         
         {{if .Data.Question.ReferenceImages}}
-        <div class="space-y-2">
-            <p class="text-sm font-medium text-gray-600">Как должно быть (референс):</p>
-            <div class="grid grid-cols-2 gap-2">
+        <div class="space-y-1">
+            <p class="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Референс:</p>
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {{range .Data.Question.ReferenceImages}}
-                <div class="relative group">
-                    <img src="{{.}}" class="rounded-lg object-cover h-40 w-full border border-gray-200 cursor-pointer transition hover:opacity-90" onclick="window.open(this.src)">
-                    <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-[10px] px-1 rounded">Образец</div>
+                <div class="relative flex-shrink-0">
+                    <img src="{{.}}" class="rounded-lg object-cover h-24 w-24 border border-gray-200 cursor-pointer transition hover:opacity-90" onclick="window.open(this.src)">
                 </div>
                 {{end}}
             </div>
         </div>
         {{end}}
 
-        <form action="/inspections/{{.Data.InspectionID}}/answer" method="POST" enctype="multipart/form-data" class="space-y-4" id="answer-form">
+        <form action="/inspections/{{.Data.InspectionID}}/answer" method="POST" enctype="multipart/form-data" class="space-y-3" id="answer-form">
             <input type="hidden" name="question_id" value="{{.Data.Question.ID}}">
             <input type="hidden" name="step" value="{{.Data.CurrentStep}}">
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Ваши фото подтверждения (до 5 шт.)</label>
-                <div class="mt-2 space-y-4">
-                    <div id="photo-preview" class="grid grid-cols-3 gap-2 empty:hidden">
-                        <!-- Сюда будут добавляться превью -->
-                    </div>
-                    
-                    <div class="flex items-center justify-center w-full" id="upload-container">
-                        <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-3 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                </svg>
-                                <p class="mb-1 text-sm text-gray-500 font-semibold">Нажмите для выбора фото</p>
-                                <p class="text-xs text-gray-400">Можно выбрать до 5 файлов</p>
-                            </div>
-                            <input type="file" name="photos" id="photo-input" multiple accept="image/*" capture="environment" class="hidden" required />
-                        </label>
-                    </div>
-                    <p id="error-message" class="text-red-500 text-xs hidden">Вы можете загрузить не более 5 фотографий.</p>
+            <div class="space-y-3">
+                <div id="photo-preview" class="grid grid-cols-4 gap-2 empty:hidden">
+                    <!-- Сюда будут добавляться превью -->
                 </div>
+                
+                <div class="flex items-center gap-3" id="upload-container">
+                    <label class="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition border border-gray-300 shadow-sm active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span class="text-sm font-semibold">Добавить фото</span>
+                        <input type="file" name="photos" id="photo-input" multiple accept="image/*" capture="environment" class="hidden" />
+                    </label>
+                    <span class="text-xs text-gray-400" id="photo-count">0/5</span>
+                </div>
+                <p id="error-message" class="text-red-500 text-xs hidden">Вы можете загрузить не более 5 фотографий.</p>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700">Комментарий (опционально)</label>
-                <textarea name="comment" rows="2" class="mt-1 block w-full p-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Введите замечание, если есть..."></textarea>
+                <textarea name="comment" rows="1" class="mt-1 block w-full p-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Комментарий (опционально)"></textarea>
             </div>
 
-            <button type="submit" id="submit-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
-                {{if eq .Data.CurrentStep .Data.TotalSteps}}Завершить проверку{{else}}Далее{{end}}
+            <button type="submit" id="submit-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition duration-200 shadow-lg active:translate-y-0.5 flex items-center justify-center">
+                <span id="btn-text">{{if eq .Data.CurrentStep .Data.TotalSteps}}Завершить проверку{{else}}Далее{{end}}</span>
+                <svg id="spinner" class="hidden animate-spin ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </button>
         </form>
     </div>
@@ -99,9 +97,10 @@
                     div.className = 'relative aspect-square';
                     div.innerHTML = `
                         <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg border border-gray-200 shadow-sm">
-                        <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md hover:bg-red-600 transition" onclick="removePhoto(this, '${file.name}')">&times;</button>
+                        <button type="button" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-md hover:bg-red-600 transition" onclick="removePhoto(this, '${file.name}')">&times;</button>
                     `;
                     preview.appendChild(div);
+                    updatePhotoCount();
                 }
                 reader.readAsDataURL(file);
             });
@@ -110,6 +109,12 @@
             photoInput.files = allFiles.files;
         }
     });
+
+    function updatePhotoCount() {
+        const count = allFiles.files.length;
+        document.getElementById('photo-count').innerText = `${count}/5`;
+        photoInput.required = (count === 0);
+    }
 
     window.removePhoto = function(btn, fileName) {
         const div = btn.parentElement;
@@ -127,11 +132,27 @@
         allFiles = newFiles;
         photoInput.files = allFiles.files;
         
+        updatePhotoCount();
+
         if (allFiles.files.length < 5) {
             errorMsg.classList.add('hidden');
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     };
+
+    const answerForm = document.getElementById('answer-form');
+    const btnText = document.getElementById('btn-text');
+    const spinner = document.getElementById('spinner');
+
+    answerForm.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        btnText.innerText = 'Загрузка...';
+        spinner.classList.remove('hidden');
+    });
+
+    // Initial count
+    updatePhotoCount();
 </script>
 {{end}}
