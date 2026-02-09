@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"MVP_checklist/internal/delivery"
 	"MVP_checklist/internal/infrastructure"
@@ -20,6 +21,9 @@ import (
 )
 
 func main() {
+	// Set Moscow timezone
+	time.Local = time.FixedZone("MSK", 3*60*60)
+
 	ctx := context.Background()
 
 	// 1. Database connection

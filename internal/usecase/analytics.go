@@ -80,13 +80,13 @@ func (u *AnalyticsUseCase) ExportToCSV(ctx context.Context, inspectionID uuid.UU
 	w.Write([]string{"Machine Serial", "Inspector", "Status", "Started At", "Finished At"})
 	finishedAt := ""
 	if detail.Inspection.FinishedAt != nil {
-		finishedAt = detail.Inspection.FinishedAt.String()
+		finishedAt = detail.Inspection.FinishedAt.Format("02.01.2006 15:04")
 	}
 	w.Write([]string{
 		detail.Inspection.MachineSerial,
 		detail.Inspection.InspectorName,
 		string(detail.Inspection.Status),
-		detail.Inspection.StartedAt.String(),
+		detail.Inspection.StartedAt.Format("02.01.2006 15:04"),
 		finishedAt,
 	})
 
