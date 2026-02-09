@@ -16,10 +16,19 @@ func NewTemplateUseCase(repo domain.ChecklistRepository) *TemplateUseCase {
 }
 
 func (u *TemplateUseCase) CreateTemplate(ctx context.Context, role domain.Role, questions []domain.Question) (*domain.ChecklistTemplate, error) {
+	// Find current version to increment
+	version := 1
+	oldTmpl, err := u.repo.GetTemplateByRole(ctx, role)
+	if err == nil && oldTmpl != nil {
+		version = oldTmpl.Version + 1
+		// Deactivate old versions
+		_ = u.repo.DeactivateTemplatesByRole(ctx, role)
+	}
+
 	template := &domain.ChecklistTemplate{
 		ID:       uuid.New(),
 		Role:     role,
-		Version:  1, // Simple versioning for MVP
+		Version:  version,
 		IsActive: true,
 	}
 
