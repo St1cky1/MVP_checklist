@@ -71,28 +71,28 @@ func main() {
 			ReferenceImages: []string{"refs/otk_example_5.jpeg"},
 		},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, true)
+	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, false)
 
 	// 2. Sticker Template (Оклейка) - Удаляем старый перед созданием
 	stickerQuestions := []domain.Question{
 		{Text: "Тестовый пункт оклейки: Проверка качества нанесения фронтальной пленки", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 		{Text: "Тестовый пункт оклейки: Отсутствие воздушных пузырей и заломов", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleSticker, stickerQuestions, true)
+	seedTemplate(ctx, templateUC, domain.RoleSticker, stickerQuestions, false)
 
 	// 3. Ads Template (Реклама) - Удаляем старый перед созданием
 	adsQuestions := []domain.Question{
 		{Text: "Тестовый пункт рекламы: Лайтбокс установлен и надежно закреплен", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 		{Text: "Тестовый пункт рекламы: Проверка равномерности подсветки", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleAds, adsQuestions, true)
+	seedTemplate(ctx, templateUC, domain.RoleAds, adsQuestions, false)
 
 	// 4. Assembler Template (Сборка) - Удаляем старый перед созданием
 	assemblerQuestions := []domain.Question{
 		{Text: "Тестовый пункт сборки: Проверка затяжки всех силовых контактов", Order: 1, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 		{Text: "Тестовый пункт сборки: Укладка кабелей внутри корпуса", Order: 2, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
 	}
-	seedTemplate(ctx, templateUC, domain.RoleAssembler, assemblerQuestions, true)
+	seedTemplate(ctx, templateUC, domain.RoleAssembler, assemblerQuestions, false)
 
 	log.Println("Seeding completed successfully!")
 }
@@ -102,11 +102,14 @@ func seedTemplate(ctx context.Context, uc *usecase.TemplateUseCase, role domain.
 		log.Printf("Deleting old template for role %s...\n", role)
 		_ = uc.DeleteTemplateByRole(ctx, role)
 	} else {
-		// Check if template exists
-		oldTmpl, _, err := uc.GetTemplateByRole(ctx, role)
+		// Check if template exists and content is same
+		oldTmpl, dbQuestions, err := uc.GetTemplateByRole(ctx, role)
 		if err == nil && oldTmpl != nil {
-			log.Printf("Template for role %s already exists, skipping.\n", role)
-			return
+			if isTemplateSame(questions, dbQuestions) {
+				log.Printf("Template for role %s matches DB, skipping.\n", role)
+				return
+			}
+			log.Printf("Template for role %s has changes, creating new version...\n", role)
 		}
 	}
 
@@ -116,4 +119,27 @@ func seedTemplate(ctx context.Context, uc *usecase.TemplateUseCase, role domain.
 	} else {
 		log.Printf("Seeded template for %s\n", role)
 	}
+}
+
+func isTemplateSame(newQs []domain.Question, oldQs []domain.Question) bool {
+	if len(newQs) != len(oldQs) {
+		return false
+	}
+	for i := range newQs {
+		if newQs[i].Text != oldQs[i].Text {
+			return false
+		}
+		if newQs[i].Order != oldQs[i].Order {
+			return false
+		}
+		if len(newQs[i].ReferenceImages) != len(oldQs[i].ReferenceImages) {
+			return false
+		}
+		for j := range newQs[i].ReferenceImages {
+			if newQs[i].ReferenceImages[j] != oldQs[i].ReferenceImages[j] {
+				return false
+			}
+		}
+	}
+	return true
 }

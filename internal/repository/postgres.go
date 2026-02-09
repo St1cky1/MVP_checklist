@@ -230,30 +230,35 @@ func (r *PostgresRepository) DeleteTemplateByRole(ctx context.Context, role doma
 	}
 	defer tx.Rollback(ctx)
 
-	// Get template ID
-	var templateID uuid.UUID
-	err = tx.QueryRow(ctx, "SELECT id FROM checklist_templates WHERE role = $1", string(role)).Scan(&templateID)
+	// Get all template IDs for this role
+	rows, err := tx.Query(ctx, "SELECT id FROM checklist_templates WHERE role = $1", string(role))
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil // Nothing to delete
+		return err
+	}
+	defer rows.Close()
+
+	var templateIDs []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err == nil {
+			templateIDs = append(templateIDs, id)
 		}
-		return err
 	}
 
-	// Delete related records (simple approach for seeding)
-	// Note: In production, you might want to keep inspections.
-	_, _ = tx.Exec(ctx, "DELETE FROM answer_photos WHERE answer_id IN (SELECT id FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1))", templateID)
-	_, _ = tx.Exec(ctx, "DELETE FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1)", templateID)
-	_, _ = tx.Exec(ctx, "DELETE FROM inspections WHERE template_id = $1", templateID)
-	_, err = tx.Exec(ctx, "DELETE FROM questions WHERE template_id = $1", templateID)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(ctx, "DELETE FROM checklist_templates WHERE id = $1", templateID)
-	if err != nil {
-		return err
+	for _, templateID := range templateIDs {
+		// Delete related records (simple approach for seeding)
+		_, _ = tx.Exec(ctx, "DELETE FROM answer_photos WHERE answer_id IN (SELECT id FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1))", templateID)
+		_, _ = tx.Exec(ctx, "DELETE FROM inspection_answers WHERE question_id IN (SELECT id FROM questions WHERE template_id = $1)", templateID)
+		_, _ = tx.Exec(ctx, "DELETE FROM inspections WHERE template_id = $1", templateID)
+		_, _ = tx.Exec(ctx, "DELETE FROM questions WHERE template_id = $1", templateID)
+		_, _ = tx.Exec(ctx, "DELETE FROM checklist_templates WHERE id = $1", templateID)
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) DeactivateTemplatesByRole(ctx context.Context, role domain.Role) error {
+	query := `UPDATE checklist_templates SET is_active = false WHERE role = $1`
+	_, err := r.db.Exec(ctx, query, string(role))
+	return err
 }
