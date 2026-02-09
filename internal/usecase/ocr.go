@@ -7,6 +7,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/disintegration/imaging"
@@ -59,8 +60,18 @@ func (u *OCRUseCase) ProcessOCR(imageBytes []byte) (string, error) {
 		return "", fmt.Errorf("OCR failed: %w", err)
 	}
 
-	result := strings.TrimSpace(text)
-	log.Printf("OCR Result: [%s]", result)
+	// Regex for serial number: 2 uppercase letters + 12 digits
+	re := regexp.MustCompile(`[A-Z]{2}\d{12}`)
 
-	return result, nil
+	// Split by whitespace to find the serial number token
+	tokens := strings.Fields(text)
+	for _, token := range tokens {
+		if re.MatchString(token) {
+			match := re.FindString(token)
+			log.Printf("Found serial number: [%s]", match)
+			return match, nil
+		}
+	}
+
+	return "", fmt.Errorf("серийный номер не найден")
 }
