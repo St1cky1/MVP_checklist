@@ -31,7 +31,7 @@ func main() {
 	// 1. OTK Template (ОТК) - ТЕПЕРЬ ТОЖЕ ОБНОВЛЯЕМ (удаляем старый)
 	otkQuestions := []domain.Question{
 		{
-			Text:            "Все полки сзади закреплены стяжками для фиксации при грузоперевозке, чтобы минимизировать выпадение контактов электрики из цепи с дисплеями",
+			Text:            "Все полки сзади закреплены стяжками для фиксации при грузоперевозке, чтобы минимизировать выпадение контактов электрики из цепи с дисплеями.",
 			Order:           1,
 			MinPhotos:       1,
 			MaxPhotos:       5,
@@ -39,7 +39,7 @@ func main() {
 			ReferenceImages: []string{"refs/otk_example_1.jpg"}, // Путь к фото в B2
 		},
 		{
-			Text:            "Пружины в каждой ячейке выставлены таким образом, чтобы из них не вываливался SOKOLOV сюрпрайз.",
+			Text:            "Пружины в каждой ячейке выставлены таким образом, чтобы из них не вываливался SOKOLOV сюрпрайз, логотип отчетливо виден и не перекрывается спиралями.",
 			Order:           2,
 			MinPhotos:       1,
 			MaxPhotos:       5,
@@ -47,15 +47,29 @@ func main() {
 			ReferenceImages: []string{"refs/otk_example_2.jpg"},
 		},
 		{
-			Text:            "Дисплеи всех линий горят, сняты светофильтры для того, чтобы дисплей горел ярче и лучше светилось табло.",
+			Text:            "Дисплеи всех линий горят.",
 			Order:           3,
 			MinPhotos:       1,
 			MaxPhotos:       5,
 			IsRequired:      true,
 			ReferenceImages: []string{"refs/otk_example_3.jpg"},
 		},
-		{Text: "Установлена сим-карта, и рядом на двери наклеена сопроводительная информация с номером сим-карты и номером телефона из комплекта SOKOLOV.", Order: 4, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
-		{Text: "На месте монетоприемника стоит металлическая заглушка", Order: 5, MinPhotos: 1, MaxPhotos: 5, IsRequired: true},
+		{
+			Text:            "Сняты светофильтры для того, чтобы дисплей горел ярче и лучше светилось табло.",
+			Order:           4,
+			MinPhotos:       1,
+			MaxPhotos:       5,
+			IsRequired:      true,
+			ReferenceImages: []string{"refs/otk_example_4.jpg"},
+		},
+		{
+			Text:            "Установлена сим-карта, и рядом на двери наклеена сопроводительная информация с номером сим-карты и номером телефона из комплекта SOKOLOV.",
+			Order:           5,
+			MinPhotos:       1,
+			MaxPhotos:       5,
+			IsRequired:      true,
+			ReferenceImages: []string{"refs/otk_example_5.jpg"},
+		},
 	}
 	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, true)
 
