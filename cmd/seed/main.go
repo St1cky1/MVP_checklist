@@ -44,7 +44,7 @@ func main() {
 			MinPhotos:       1,
 			MaxPhotos:       5,
 			IsRequired:      true,
-			ReferenceImages: []string{"refs/otk_example_2.jpg"},
+			ReferenceImages: []string{"refs/otk_example_2.jpeg"},
 		},
 		{
 			Text:            "Дисплеи всех линий горят.",
@@ -52,7 +52,7 @@ func main() {
 			MinPhotos:       1,
 			MaxPhotos:       5,
 			IsRequired:      true,
-			ReferenceImages: []string{"refs/otk_example_3.jpg"},
+			ReferenceImages: []string{"refs/otk_example_3.jpeg"},
 		},
 		{
 			Text:            "Сняты светофильтры для того, чтобы дисплей горел ярче и лучше светилось табло.",
@@ -60,7 +60,7 @@ func main() {
 			MinPhotos:       1,
 			MaxPhotos:       5,
 			IsRequired:      true,
-			ReferenceImages: []string{"refs/otk_example_4.jpg"},
+			ReferenceImages: []string{"refs/otk_example_4.jpeg"},
 		},
 		{
 			Text:            "Установлена сим-карта, и рядом на двери наклеена сопроводительная информация с номером сим-карты и номером телефона из комплекта SOKOLOV.",
@@ -68,7 +68,7 @@ func main() {
 			MinPhotos:       1,
 			MaxPhotos:       5,
 			IsRequired:      true,
-			ReferenceImages: []string{"refs/otk_example_5.jpg"},
+			ReferenceImages: []string{"refs/otk_example_5.jpeg"},
 		},
 	}
 	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, true)
