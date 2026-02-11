@@ -70,6 +70,14 @@ func main() {
 			IsRequired:      true,
 			ReferenceImages: []string{"refs/otk_example_5.jpeg"},
 		},
+		{
+			Text:            "наличие заглушки на месте купюроприемника ",
+			Order:           6,
+			MinPhotos:       1,
+			MaxPhotos:       5,
+			IsRequired:      true,
+			ReferenceImages: []string{},
+		},
 	}
 	seedTemplate(ctx, templateUC, domain.RoleOTK, otkQuestions, false)
 
