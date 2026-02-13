@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type FileSystemStorage struct {
@@ -32,10 +33,13 @@ func (s *FileSystemStorage) Upload(ctx context.Context, bucket, key string, data
 		return "", fmt.Errorf("failed to write file: %w", err)
 	}
 
-	// Возвращаем путь, который будет доступен через /uploads/
-	return "/uploads/" + key, nil
+	// Возвращаем ключ (относительный путь), который будет использоваться в GetURL
+	return key, nil
 }
 
 func (s *FileSystemStorage) GetURL(ctx context.Context, bucket, key string) (string, error) {
+	if strings.HasPrefix(key, "/uploads/") {
+		return key, nil
+	}
 	return "/uploads/" + key, nil
 }
